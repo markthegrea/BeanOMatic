@@ -26,4 +26,6 @@ hs_err_pid*
 org.eclipse.*
 settings.json
 .classpath
+*/target/**
+
 
