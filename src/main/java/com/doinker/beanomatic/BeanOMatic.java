@@ -11,12 +11,64 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import com.doinker.beanomatic.providers.DedfaultBOMProviderFactory;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class BeanOMatic {
 
     public static <T> T createBean(Class<T> clazz) {
         return createObject(clazz);
+    }
+
+    public static <T> T createBean2(Class<T> clazz) {
+        return createObject2(clazz, new DedfaultBOMProviderFactory());
+    }
+
+    public static <T> T createObject2(Class<T> clazz, DedfaultBOMProviderFactory fac) {
+
+        T o = null;
+        try {
+            if (clazz.isEnum()) {
+                return clazz.getEnumConstants()[0];
+            }
+            if (Modifier.isFinal(clazz.getModifiers())) {
+                return null;
+            }
+            o = clazz.getDeclaredConstructor().newInstance();
+            if (clazz == Object.class) {
+                return o;
+            }
+            List<Field> fields = new ArrayList<Field>();
+            if (clazz.getSuperclass().getSuperclass() != null) {
+                fields.addAll(Arrays.asList(clazz.getSuperclass().getSuperclass().getDeclaredFields()));
+            }
+            fields.addAll(Arrays.asList(clazz.getSuperclass().getDeclaredFields()));
+            fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+
+            for (Field field : fields) {
+                field.setAccessible(true);
+
+                if (Modifier.isFinal(field.getModifiers())) {
+                    continue;
+                }
+
+                if (field.getName().equals("serialVersionUID")) {
+                    continue;
+                }
+
+                BOMProvider<?> theProvider = fac.fetchValue(field.getType());
+                if (theProvider != null){
+                    field.set(o, theProvider.fetchValue(field.getName()));
+                } else {
+                    field.set(o, createObject2(field.getType(), fac));
+                }
+                
+            }
+        } catch (Exception e) {
+            System.out.println("fail!" + e);
+        }
+        return o;
     }
 
 

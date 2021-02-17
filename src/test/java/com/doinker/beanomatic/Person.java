@@ -1,13 +1,14 @@
-import java.util.Calendar;
+package com.doinker.beanomatic;
+
+import java.util.Date;
 
 public class Person {
 
     private String name;
     private Double age;
-    private Calendar birthday;
+    private Date birthday;
     private int yearsOfService;
 
     private Address address;
-
 
 }
